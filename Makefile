@@ -1,5 +1,5 @@
 REGISTRY=quay.io/projectquay
-IMAGE_NAME=test-app
+IMAGE_NAME=golang
 DIST_DIR=dist
 TAG ?= $(OS)_$(ARCH)
 IMAGE_TAG := $(REGISTRY)/$(IMAGE_NAME):$(TAG)
@@ -63,4 +63,4 @@ image:
 	done
 
 clean:
-	docker rmi $(shell docker image ls --format '{{.Repository}}:{{.Tag}}' | grep "^$(REGISTRY)/$(IMAGE_NAME):$(TAG)") 2>/dev/null || true
+	docker rmi $(shell docker image ls --format '{{.Repository}}:{{.Tag}}' | grep "^$(REGISTRY)/$(IMAGE_NAME):$$platform") 2>/dev/null || true
