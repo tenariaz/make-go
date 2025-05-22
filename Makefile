@@ -1,8 +1,8 @@
 APP=$(shell basename $(shell git remote get-url origin))
 REGISTRY=ghcr.io/tenariaz
 VERSION=$(shell git describe --tags --abbrev=0)-$(shell git rev-parse --short HEAD)
-TARGETOS?=$(shell go env GOOS)
-TARGETARCH?=$(shell go env GOARCH)
+TARGETOS ?= linux
+TARGETARCH ?= amd64
 IMAGE_TAG=$(REGISTRY)/$(APP):$(VERSION)-$(TARGETOS)-$(TARGETARCH)
 
 format:
