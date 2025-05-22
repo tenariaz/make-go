@@ -1,6 +1,7 @@
 REGISTRY=quay.io/projectquay
 IMAGE_NAME=test-app
 DIST_DIR=dist
+IMAGE_TAG=$(REGISTRY)/$(APP):$(VERSION)-$(TARGETOS)-$(TARGETARCH)
 
 PLATFORMS=linux_amd64 linux_arm64 windows_amd64 darwin_amd64 darwin_arm64
 
