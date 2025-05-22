@@ -1,11 +1,11 @@
 #REGISTRY=quay.io/projectquay
 IMAGE_NAME=test-app
 DIST_DIR=dist
-APP=$(shell basename $(shell git remote get-url origin))
+APP=make-go
 REGISTRY=ghcr.io/tenariaz
-VERSION=$(shell git describe --tags --abbrev=0)-$(shell git rev-parse --short HEAD)
-TARGETOS?=$(shell go env GOOS)
-TARGETARCH?=$(shell go env GOARCH)
+#VERSION=$(shell git describe --tags --abbrev=0)-$(shell git rev-parse --short HEAD)
+#TARGETOS?=$(shell go env GOOS)
+#TARGETARCH?=$(shell go env GOARCH)
 IMAGE_TAG=$(REGISTRY)/$(APP):$(VERSION)-$(TARGETOS)-$(TARGETARCH)
 
 PLATFORMS=linux_amd64 linux_arm64 windows_amd64 darwin_amd64 darwin_arm64
