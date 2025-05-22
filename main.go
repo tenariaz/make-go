@@ -1,3 +1,5 @@
-module ex.com
+package main
 
-go 1.21.6
+func main() {
+    println("Hello from the containerized app!")
+}
