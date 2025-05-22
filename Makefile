@@ -63,4 +63,4 @@ image:
 	done
 
 clean:
-	docker rmi $(IMAGE_TAG) 2>/dev/null || true;
+	docker rmi quay.io/projectquay/test-app:linux_arm64 2>/dev/null || true;
