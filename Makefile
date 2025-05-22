@@ -1,7 +1,8 @@
 REGISTRY=quay.io/projectquay
 IMAGE_NAME=test-app
 DIST_DIR=dist
-
+TAG ?= $(OS)_$(ARCH)
+IMAGE_TAG := $(REGISTRY)/$(IMAGE_NAME):$(TAG)
 PLATFORMS=linux_amd64 linux_arm64 windows_amd64 darwin_amd64 darwin_arm64
 
 .PHONY: all clean $(PLATFORMS)
@@ -32,7 +33,7 @@ build-platform:
 		--build-arg TARGETOS=$(OS) \
 		--build-arg TARGETARCH=$(ARCH) \
 		--output type=docker \
-		--tag $(REGISTRY)/$(IMAGE_NAME):$(OS)_$(ARCH) \
+		--tag $(IMAGE_TAG) \
 		.
 
 build-darwin: $(DIST_DIR)
@@ -62,4 +63,4 @@ image:
 	done
 
 clean:
-	docker rmi $(REGISTRY)/$(IMAGE_NAME):$(OS)_$(ARCH) 2>/dev/null || true;
+	docker rmi $(IMAGE_TAG) 2>/dev/null || true;
