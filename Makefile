@@ -1,5 +1,5 @@
-REGISTRY=quay.io/projectquay
-IMAGE_NAME=golang
+REGISTRY=ghcr.io/tenariaz
+IMAGE_NAME=make-go
 DIST_DIR=dist
 TAG ?= $(OS)_$(ARCH)
 IMAGE_TAG := $(REGISTRY)/$(IMAGE_NAME):$(TAG)
@@ -66,8 +66,4 @@ clean:
 		docker rmi $(REGISTRY)/$(IMAGE_NAME):$$platform 2>/dev/null || true; \
 	done
 
-clean2:
-	@for platform in $(PLATFORMS); do \
-		echo "🧹 Removing image $(REGISTRY)/$(IMAGE_NAME):$$platform..."; \
-		docker rmi $(REGISTRY)/$(IMAGE_NAME):$$platform 2>/dev/null || true; \
-	done
+
