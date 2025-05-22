@@ -62,5 +62,4 @@ image:
 	done
 
 clean:
-	docker rmi $(REGISTRY)/$(IMAGE_NAME) 2>/dev/null || true;
-	docker rmi $(shell docker image ls --format '{{.Repository}}:{{.Tag}}' | grep "^$(REGISTRY)/$(APP)") 2>/dev/null || true
+	docker rmi $(REGISTRY)/$(IMAGE_NAME):$(OS)_$(ARCH) 2>/dev/null || true;
