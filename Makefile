@@ -63,4 +63,4 @@ image:
 	done
 
 clean:
-	docker rmi $(shell docker image ls --format '{{.Repository}}:{{.Tag}}' | grep "^$(REGISTRY)/$(IMAGE_NAME):$$platform") 2>/dev/null || true
+	docker rmi ^$(REGISTRY)/$(IMAGE_NAME):$$platform 2>/dev/null || true
