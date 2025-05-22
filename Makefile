@@ -61,8 +61,12 @@ image:
 			--tag $(REGISTRY)/$(IMAGE_NAME):$$platform \
 			. ; \
 	done
-
 clean:
+	@for platform in $(PLATFORMS); do \
+		docker rmi $(REGISTRY)/$(IMAGE_NAME):$$platform 2>/dev/null || true; \
+	done
+
+clean2:
 	@for platform in $(PLATFORMS); do \
 		echo "🧹 Removing image $(REGISTRY)/$(IMAGE_NAME):$$platform..."; \
 		docker rmi $(REGISTRY)/$(IMAGE_NAME):$$platform 2>/dev/null || true; \
