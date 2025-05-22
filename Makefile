@@ -64,5 +64,5 @@ push:
 	docker push $(REGISTRY)/$(APP):$(VERSION)-$(TARGETOS)-$(TARGETARCH)
 
 clean:
-	rm -rf kbot kbot.exe
+#	rm -rf kbot kbot.exe
 	@docker rmi $(shell docker image ls --format '{{.Repository}}:{{.Tag}}' | grep "^$(REGISTRY)/$(APP):$(VERSION)") 2>/dev/null || true
