@@ -63,4 +63,4 @@ image:
 	done
 
 clean:
-	docker rmi ^$(REGISTRY)/$(IMAGE_NAME):$$platform 2>/dev/null || true
+	docker rmi $(REGISTRY)/$(IMAGE_NAME):$(IMAGE_PLATFORMS) 2>/dev/null || true
