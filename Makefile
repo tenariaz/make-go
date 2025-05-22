@@ -61,9 +61,10 @@ image:
 			--tag $(REGISTRY)/$(IMAGE_NAME):$$platform \
 			. ; \
 	done
+
 clean:
 	@for platform in $(PLATFORMS); do \
 		docker rmi $(REGISTRY)/$(IMAGE_NAME):$$platform 2>/dev/null || true; \
-	done
+	donef
 
 
