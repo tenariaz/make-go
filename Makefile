@@ -1,71 +1,73 @@
-#REGISTRY=quay.io/projectquay
-IMAGE_NAME=test-app
-DIST_DIR=dist
-APP=make-go
+APP=$(shell basename $(shell git remote get-url origin))
 REGISTRY=ghcr.io/tenariaz
-#VERSION=$(shell git describe --tags --abbrev=0)-$(shell git rev-parse --short HEAD)
-#TARGETOS?=$(shell go env GOOS)
-#TARGETARCH?=$(shell go env GOARCH)
+GIT_TAG=$(shell git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+VERSION=$(GIT_TAG)-$(shell git rev-parse --short HEAD)
+TARGETOS ?= $(shell go env GOOS)
+TARGETARCH ?= $(shell go env GOARCH)
 IMAGE_TAG=$(REGISTRY)/$(APP):$(VERSION)-$(TARGETOS)-$(TARGETARCH)
 
-PLATFORMS=linux_amd64 linux_arm64 windows_amd64 darwin_amd64 darwin_arm64
+PLATFORMS = linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64
 
-.PHONY: all clean $(PLATFORMS)
+.PHONY: format lint test get build image push clean \
+        linux linux-arm macos macos-arm windows \
+        image-linux image-linux-arm image-macos image-macos-arm image-windows
 
-all: $(PLATFORMS)
+format:
+	go fmt ./...
 
-$(DIST_DIR):
-	mkdir -p $(DIST_DIR)
+lint:
+	golangci-lint run
 
-linux_amd64:
-	$(MAKE) build-platform OS=linux ARCH=amd64
+test:
+	go test ./...
 
-linux_arm64:
-	$(MAKE) build-platform OS=linux ARCH=arm64
+get:
+	go mod tidy
 
-# windows_amd64:
-# 	$(MAKE) build-platform OS=windows ARCH=amd64
+build: format get
+	CGO_ENABLED=0 GOOS=$(TARGETOS) GOARCH=$(TARGETARCH) go build -v -o kbot$(if $(filter windows,$(TARGETOS)),.exe,) -ldflags "-X=github.com/tenariaz/kbot/cmd.appVersion=$(VERSION)"
 
-darwin_amd64:
-	$(MAKE) build-darwin OS=darwin ARCH=amd64
+linux:
+	$(MAKE) build TARGETOS=linux TARGETARCH=amd64
 
-darwin_arm64:
-	$(MAKE) build-darwin OS=darwin ARCH=arm64
+linux-arm:
+	$(MAKE) build TARGETOS=linux TARGETARCH=arm64
 
-build-platform:
-	docker buildx build \
-		--platform $(OS)/$(ARCH) \
-		--build-arg TARGETOS=$(OS) \
-		--build-arg TARGETARCH=$(ARCH) \
-		--output type=docker \
-		--tag $(REGISTRY)/$(IMAGE_NAME):$(OS)_$(ARCH) \
-		.
+macos:
+	$(MAKE) build TARGETOS=darwin TARGETARCH=amd64
 
-build-darwin: $(DIST_DIR)
-	@echo "🛠 Building darwin binary for $(ARCH)..."
-	GOOS=$(OS) GOARCH=$(ARCH) CGO_ENABLED=0 go build -o $(DIST_DIR)/app-$(OS)-$(ARCH) .
+macos-arm:
+	$(MAKE) build TARGETOS=darwin TARGETARCH=arm64
 
-windows_amd64:
-	$(MAKE) build-windows OS=windows ARCH=amd64
-
-build-windows: $(DIST_DIR)
-	@echo "🛠 Building Windows binary for $(ARCH)..."
-	GOOS=$(OS) GOARCH=$(ARCH) CGO_ENABLED=0 go build -o $(DIST_DIR)/app-$(OS)-$(ARCH).exe .
-
+windows:
+	$(MAKE) build TARGETOS=windows TARGETARCH=amd64
 
 image:
-	@for platform in $(IMAGE_PLATFORMS); do \
-		os=$$(echo $$platform | cut -d_ -f1); \
-		arch=$$(echo $$platform | cut -d_ -f2); \
-		echo "🐳 Building Docker image for $$platform..."; \
-		docker buildx build \
-			--platform $$os/$$arch \
-			--build-arg TARGETOS=$$os \
-			--build-arg TARGETARCH=$$arch \
-			--output type=docker \
-			--tag $(REGISTRY)/$(IMAGE_NAME):$$platform \
-			. ; \
-	done
+	docker buildx build \
+		--platform $(TARGETOS)/$(TARGETARCH) \
+		--build-arg TARGETOS=$(TARGETOS) \
+		--build-arg TARGETARCH=$(TARGETARCH) \
+		-t $(IMAGE_TAG) \
+		--load .
+
+image-linux:
+	$(MAKE) image TARGETOS=linux TARGETARCH=amd64
+
+image-linux-arm:
+	$(MAKE) image TARGETOS=linux TARGETARCH=arm64
+
+image-macos:
+	$(MAKE) image TARGETOS=darwin TARGETARCH=amd64
+
+image-macos-arm:
+	$(MAKE) image TARGETOS=darwin TARGETARCH=arm64
+
+image-windows:
+	$(MAKE) image TARGETOS=windows TARGETARCH=amd64
+
+push:
+	docker push $(IMAGE_TAG)
 
 clean:
+	rm -f kbot kbot.exe
 	-docker rmi $(IMAGE_TAG) 2>/dev/null || true
