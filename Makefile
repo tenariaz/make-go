@@ -49,6 +49,7 @@ image:
 		$(foreach p,$(PLATFORMS),--platform $(p) ) \
 		--build-arg VERSION=$(VERSION) \
 		--tag $(REGISTRY)/$(APP):$(VERSION) \
+		--push \
 		.
 
 # Alias-цілі для зручності
