@@ -1,6 +1,6 @@
 #REGISTRY=quay.io/projectquay
-#IMAGE_NAME=test-app
-#DIST_DIR=dist
+IMAGE_NAME=test-app
+DIST_DIR=dist
 APP=$(shell basename $(shell git remote get-url origin))
 REGISTRY=ghcr.io/tenariaz
 VERSION=$(shell git describe --tags --abbrev=0)-$(shell git rev-parse --short HEAD)
