@@ -62,4 +62,5 @@ image:
 	done
 
 clean:
-	docker rmi $(REGISTRY)/$(IMAGE_NAME):$$platform 2>/dev/null || true;
+	rm -rf kbot kbot.exe
+	@docker rmi $(shell docker image ls --format '{{.Repository}}:{{.Tag}}' | grep "^$(REGISTRY)/$(APP):$(VERSION)") 2>/dev/null || true
