@@ -1,58 +1,49 @@
+APP=$(shell basename $(shell git remote get-url origin))
 REGISTRY=ghcr.io/tenariaz
-IMAGE_NAME=make-go
-DIST_DIR=dist
-TAG ?= $(OS)_$(ARCH)
-IMAGE_TAG := $(REGISTRY)/$(IMAGE_NAME):$(TAG)
+VERSION=$(shell git describe --tags --abbrev=0)-$(shell git rev-parse --short HEAD)
+TARGETOS?=linux
+TARGETARCH?=amd64
+IMAGE_TAG=$(REGISTRY)/$(APP):$(VERSION)-$(TARGETOS)-$(TARGETARCH)
 PLATFORMS=linux_amd64 linux_arm64 windows_amd64 darwin_amd64 darwin_arm64
+format:
+	gofmt -s -w ./
 
-.PHONY: all clean $(PLATFORMS)
+lint:
+	golint
 
-all: $(PLATFORMS)
+test:
+	go test -v
 
-$(DIST_DIR):
-	mkdir -p $(DIST_DIR)
+get:
+	go get
 
-linux_amd64:
-	$(MAKE) build-platform OS=linux ARCH=amd64
+build: format get
+	CGO_ENABLED=0 GOOS=$(TARGETOS) GOARCH=$(TARGETARCH) go build -v -o kbot -ldflags "-X=github.com/tenariaz/kbot/cmd.appVersion=$(VERSION)"
 
-linux_arm64:
-	$(MAKE) build-platform OS=linux ARCH=arm64
+linux:
+	make build TARGETOS=linux TARGETARCH=amd64
 
-# windows_amd64:
-# 	$(MAKE) build-platform OS=windows ARCH=amd64
+linux-arm:
+	make build TARGETOS=linux TARGETARCH=arm64
 
-darwin_amd64:
-	$(MAKE) build-darwin OS=darwin ARCH=amd64
+macos:
+	make build TARGETOS=darwin TARGETARCH=amd64
 
-darwin_arm64:
-	$(MAKE) build-darwin OS=darwin ARCH=arm64
+macos-arm:
+	make build TARGETOS=darwin TARGETARCH=arm64
 
-build-platform:
-	docker buildx build \
-		--platform $(OS)/$(ARCH) \
-		--build-arg TARGETOS=$(OS) \
-		--build-arg TARGETARCH=$(ARCH) \
-		--output type=docker \
-		--tag $(IMAGE_TAG) \
-		.
-
-build-darwin: $(DIST_DIR)
-	@echo "🛠 Building darwin binary for $(ARCH)..."
-	GOOS=$(OS) GOARCH=$(ARCH) CGO_ENABLED=0 go build -o $(DIST_DIR)/app-$(OS)-$(ARCH) .
-
-windows_amd64:
-	$(MAKE) build-windows OS=windows ARCH=amd64
-
-build-windows: $(DIST_DIR)
-	@echo "🛠 Building Windows binary for $(ARCH)..."
-	GOOS=$(OS) GOARCH=$(ARCH) CGO_ENABLED=0 go build -o $(DIST_DIR)/app-$(OS)-$(ARCH).exe .
-
+windows:
+	make build TARGETOS=windows TARGETARCH=amd64
+	mv kbot kbot.exe
 
 image:
-	@for platform in $(IMAGE_PLATFORMS); do \
+# 	docker build \
+# 		--build-arg TARGETOS=$(TARGETOS) \
+# 		--build-arg TARGETARCH=$(TARGETARCH) \
+# 		-t $(IMAGE_TAG) .
+	@for platform in $(PLATFORMS); do \
 		os=$$(echo $$platform | cut -d_ -f1); \
 		arch=$$(echo $$platform | cut -d_ -f2); \
-		echo "🐳 Building Docker image for $$platform..."; \
 		docker buildx build \
 			--platform $$os/$$arch \
 			--build-arg TARGETOS=$$os \
@@ -62,7 +53,30 @@ image:
 			. ; \
 	done
 
+# Alias-цілі для зручності
+image-linux:
+	$(MAKE) image TARGETOS=linux TARGETARCH=amd64
+
+image-linux-arm:
+	$(MAKE) image TARGETOS=linux TARGETARCH=arm64
+
+image-macos:
+	$(MAKE) image TARGETOS=darwin TARGETARCH=amd64
+
+image-macos-arm:
+	$(MAKE) image TARGETOS=darwin TARGETARCH=arm64
+
+image-windows:
+	$(MAKE) image TARGETOS=windows TARGETARCH=amd64
+
+
+
+push:
+	docker push $(REGISTRY)/$(APP):$(VERSION)-$(TARGETOS)-$(TARGETARCH)
+
 clean:
 	@for platform in $(PLATFORMS); do \
 		docker rmi $(REGISTRY)/$(IMAGE_NAME):$$platform 2>/dev/null || true; \
 	done
+	# rm -rf kbot kbot.exe
+	# @docker rmi $(shell docker image ls --format '{{.Repository}}:{{.Tag}}' | grep "^$(REGISTRY)/$(APP):$(VERSION)") 2>/dev/null || true
