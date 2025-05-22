@@ -63,5 +63,4 @@ image:
 	done
 
 clean:
-	docker rmi quay.io/projectquay/test-app:linux_arm64 2>/dev/null || true;
 	docker rmi $(shell docker image ls --format '{{.Repository}}:{{.Tag}}' | grep "^$(REGISTRY)/$(IMAGE_NAME):$(TAG)") 2>/dev/null || true
